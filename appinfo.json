@@ -1,0 +1,14 @@
+{
+    "id": "com.ctvc.iptv",
+    "version": "1.0.0",
+    "vendor": "CTVC",
+    "type": "web",
+    "main": "index.html",
+    "title": "IPTV CTVC",
+    "icon": "icon.png",
+    "largeIcon": "largeIcon.png",
+    "resolution": "1920x1080",
+    "disableBackHistoryAPI": true,
+    "handlesRelaunch": true
+}
+

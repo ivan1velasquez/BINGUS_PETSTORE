@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="application-name" content="IPTV CTVC">
+    <title>IPTV CTVC</title>
+    <!-- WebOS TV specific -->
+    <script type="text/javascript" src="webOSTVjs-1.2.10/webOSTV.js"></script>
+    <script type="text/javascript" src="webOSTVjs-1.2.10/webOSTV-dev.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/player.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Reproductor nativo integrado - Bibliotecas externas solo como fallback -->
+    <!-- HLS.js como fallback para navegadores sin soporte HLS nativo -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="screen active">
+        <div class="splash-content">
+            <div class="splash-logo">
+                <div class="tv-icon">📺</div>
+                <h1>IPTV</h1>
+                <p class="splash-subtitle">Televisión por Internet</p>
+            </div>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <div class="login-logo">📺</div>
+                    <h2>Iniciar Sesión</h2>
+                    <p>Ingresa tus credenciales IPTV</p>
+                </div>
+                <form id="login-form" class="login-form">
+                    <div class="input-group">
+                        <label for="username">Usuario</label>
+                        <input type="text" id="username" name="username" placeholder="Ingresa tu usuario" autocomplete="off" tabindex="1">
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" name="password" placeholder="Ingresa tu contraseña" autocomplete="off" tabindex="2">
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" id="btn-login" class="btn btn-primary focusable" tabindex="3">
+                            <span class="btn-text">Ingresar</span>
+                            <span class="btn-loading" style="display: none;">Cargando...</span>
+                        </button>
+                        <button type="button" id="btn-exit" class="btn btn-secondary focusable" tabindex="4">Salir</button>
+                    </div>
+                </form>
+                <div id="login-error" class="error-message" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Screen (Channel List) -->
+    <div id="main-screen" class="screen">
+        <header class="main-header">
+            <div class="header-left">
+                <div class="app-logo">📺 IPTV</div>
+            </div>
+            <div class="header-center">
+                <div class="search-container" id="search-container">
+                    <input type="text" id="search-input" class="search-input focusable" placeholder="Buscar canales..." tabindex="5">
+                    <button id="search-clear" class="search-clear focusable" tabindex="6">✕</button>
+                </div>
+            </div>
+            <div class="header-right">
+                <button id="btn-search" class="header-btn focusable" tabindex="7" title="Buscar">🔍</button>
+                <button id="btn-refresh" class="header-btn focusable" tabindex="8" title="Refrescar">🔄</button>
+                <button id="btn-logout" class="header-btn focusable" tabindex="9" title="Cerrar Sesión">🚪</button>
+            </div>
+        </header>
+        <main class="main-content">
+            <div id="loading-channels" class="loading-overlay">
+                <div class="spinner"></div>
+                <p>Cargando canales...</p>
+            </div>
+            <div id="channels-grid" class="channels-grid"></div>
+            <div id="no-channels" class="no-channels" style="display: none;">
+                <p>No se encontraron canales</p>
+            </div>
+        </main>
+        <!-- Channel Number Overlay -->
+        <div id="channel-number-overlay" class="channel-number-overlay" style="display: none;">
+            <span id="channel-number-text"></span>
+        </div>
+    </div>
+
+    <!-- Player Screen -->
+    <div id="player-screen" class="screen">
+        <div class="player-container">
+            <video id="video-player" class="video-player" 
+                   playsinline webkit-playsinline x5-playsinline 
+                   preload="auto" controls="false"></video>
+            
+            <!-- Loading Animation -->
+            <div id="player-loading" class="player-loading">
+                <div class="loading-spinner"></div>
+                <p>Cargando canal...</p>
+            </div>
+            
+            <!-- Player Controls -->
+            <div id="player-controls" class="player-controls">
+                <div class="controls-top">
+                    <button id="btn-back" class="control-btn focusable" title="Volver">←</button>
+                    <div class="channel-info">
+                        <span id="channel-number-display" class="channel-number"></span>
+                        <span id="channel-name-display" class="channel-name"></span>
+                    </div>
+                    <div class="controls-top-right">
+                        <button id="btn-channel-list" class="control-btn focusable" title="Lista de Canales">☰</button>
+                        <button id="btn-quality" class="control-btn focusable" title="Calidad">⚙</button>
+                    </div>
+                </div>
+                <div class="controls-center">
+                    <button id="btn-prev-channel" class="control-btn large focusable" title="Canal Anterior">⏮</button>
+                    <button id="btn-rewind" class="control-btn focusable" title="Retroceder">⏪</button>
+                    <button id="btn-play-pause" class="control-btn play-btn focusable" title="Play/Pause">▶</button>
+                    <button id="btn-forward" class="control-btn focusable" title="Adelantar">⏩</button>
+                    <button id="btn-next-channel" class="control-btn large focusable" title="Siguiente Canal">⏭</button>
+                </div>
+                <div class="controls-bottom">
+                    <span id="current-time" class="time-display">00:00</span>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                    </div>
+                    <span id="total-time" class="time-display">00:00</span>
+                </div>
+            </div>
+            
+            <!-- Channel Number Input Overlay -->
+            <div id="player-channel-overlay" class="player-channel-overlay" style="display: none;">
+                <span id="player-channel-text"></span>
+            </div>
+            
+            <!-- Error Notification -->
+            <div id="player-error-notification" class="player-error-notification" style="display: none;">
+                <div class="error-icon">⚠</div>
+                <div class="error-content">
+                    <div class="error-title">Error de Reproducción</div>
+                    <div class="error-message-text"></div>
+                </div>
+                <button id="btn-retry-channel" class="error-retry-btn focusable">Reintentar</button>
+            </div>
+        </div>
+        
+        <!-- Channel List Panel -->
+        <div id="channel-list-panel" class="channel-list-panel" style="display: none;">
+            <div class="panel-header">
+                <h3>Lista de Canales</h3>
+                <button id="btn-close-panel" class="close-panel-btn focusable">✕</button>
+            </div>
+            <div id="channel-list-content" class="channel-list-content"></div>
+        </div>
+        
+        <!-- Quality Selector -->
+        <div id="quality-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3>Calidad de Video</h3>
+                <div id="quality-options" class="quality-options"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/m3uParser.js"></script>
+    <script src="js/logoDownloader.js"></script>
+    <script src="js/webOSPlayerAdapter.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
+
